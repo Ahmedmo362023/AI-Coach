@@ -66,30 +66,41 @@ def init_cookies() -> None:
 
 def _read_cookie() -> str | None:
     ctl = st.session_state.get("_cookie_ctl")
-    return ctl.get(COOKIE_NAME) if ctl else None
+    if not ctl:
+        return None
+    try:
+        return ctl.get(COOKIE_NAME)
+    except Exception:  # noqa: BLE001  (browser hasn't answered yet: cookies is None)
+        return None
 
 
 def _write_cookie(token: str) -> None:
     ctl = st.session_state.get("_cookie_ctl")
     if not ctl:
         return
-    ctl.set(
-        COOKIE_NAME,
-        token,
-        max_age=COOKIE_DAYS * 86400,
-        expires=datetime.now() + timedelta(days=COOKIE_DAYS),
-    )
+    try:
+        ctl.set(
+            COOKIE_NAME,
+            token,
+            max_age=COOKIE_DAYS * 86400,
+            expires=datetime.now() + timedelta(days=COOKIE_DAYS),
+        )
+    except Exception:  # noqa: BLE001
+        # The library sends the command to the browser first and only then updates its
+        # own local copy, which can fail before the browser has answered. Cookie is set.
+        pass
     st.session_state["_cookie_token"] = token
 
 
 def _clear_cookie() -> None:
     ctl = st.session_state.get("_cookie_ctl")
     st.session_state.pop("_cookie_token", None)
-    if ctl and ctl.get(COOKIE_NAME) is not None:
-        try:
-            ctl.remove(COOKIE_NAME)
-        except Exception:  # noqa: BLE001
-            pass
+    if not ctl:
+        return
+    try:
+        ctl.remove(COOKIE_NAME)
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def restore_session() -> bool:
