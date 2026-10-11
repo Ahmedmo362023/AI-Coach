@@ -37,7 +37,8 @@ def _reports_tab(client, user) -> None:
 
     r = st.session_state.get("mr_coach")
     if r:
-        st.markdown(r["text"])
+        with st.container(key="gc_rep_new"):
+            st.markdown(r["text"])
         for f in r["metrics"]["flags"]:
             st.caption(f"⚑ {f}")
         with st.expander("Numbers behind this report"):
@@ -59,7 +60,18 @@ def _reports_tab(client, user) -> None:
         st.info("No reports yet.")
     for p in past:
         with st.expander(f"{p['period_start']} → {p['period_end']}"):
-            st.markdown(p["report_text"])
+            tkey = f"mr_en_{p['id']}"
+            en = st.session_state.get(tkey)
+            show_en = st.toggle("English", key=f"{tkey}_on", value=False)
+            if show_en and en is None:
+                with st.spinner("Translating..."):
+                    try:
+                        en = llm.translate_to_english(p["report_text"])
+                        st.session_state[tkey] = en
+                    except Exception as e:  # noqa: BLE001
+                        st.error(f"Couldn't translate: {e}")
+            with st.container(key=f"gc_rep_{p['id']}"):
+                st.markdown(en if show_en and en else p["report_text"])
 
 
 # ---------- Chat ----------

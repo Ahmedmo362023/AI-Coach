@@ -321,3 +321,15 @@ def coach_chat(history: list[dict], question: str, context: dict, chunks: list[d
         ),
         temperature=0.5,
     )
+
+
+TRANSLATE_PROMPT = """Translate the Markdown text below into clear, natural English.
+Keep the Markdown structure (headings, bullets, bold) and every number exactly as is.
+Do not add or remove information. Return only the translation.
+
+{text}
+"""
+
+
+def translate_to_english(text: str) -> str:
+    return generate_text(TRANSLATE_PROMPT.format(text=text), temperature=0.1)

@@ -192,6 +192,24 @@ code { color: #FF8A94; background: var(--surface-2); }
 .gc-ach-prog { color: var(--red); font-size: .74rem; font-weight: 700; margin-top: .2rem; }
 .gc-ach.locked .gc-ach-prog { color: var(--muted); }
 
+
+/* ---------- Reports + chat text: compact headings, mixed Arabic/English ---------- */
+[class*="st-key-gc_rep"] h1, [class*="st-key-gc_rep"] h2, [class*="st-key-gc_rep"] h3,
+[data-testid="stChatMessage"] h1, [data-testid="stChatMessage"] h2, [data-testid="stChatMessage"] h3 {
+  font-size: 1.12rem !important; font-weight: 700; margin: 1.1rem 0 .4rem 0; padding: 0;
+  color: var(--text); border-left: 3px solid var(--red); padding-left: .6rem;
+  unicode-bidi: plaintext; text-align: start;
+}
+[class*="st-key-gc_rep"] p, [class*="st-key-gc_rep"] li,
+[data-testid="stChatMessage"] p, [data-testid="stChatMessage"] li {
+  font-size: .95rem; line-height: 1.75; unicode-bidi: plaintext; text-align: start;
+}
+[class*="st-key-gc_rep"] ul, [class*="st-key-gc_rep"] ol,
+[data-testid="stChatMessage"] ul, [data-testid="stChatMessage"] ol {
+  list-style-position: inside; padding-inline-start: .2rem;
+}
+[class*="st-key-gc_rep"] strong, [data-testid="stChatMessage"] strong { color: #fff; }
+
 /* ---------- Scrollbar ---------- */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: #2E2E2E; border-radius: 8px; }
