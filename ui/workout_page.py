@@ -14,8 +14,55 @@ PLACEHOLDER = (
 )
 
 
+def _templates(history: list[dict]) -> list[dict]:
+    """Most recent workout per title (history is newest first), so 'Chest day' offers its latest version."""
+    seen: set[str] = set()
+    out: list[dict] = []
+    for w in history:
+        if not w.get("sets"):
+            continue
+        key = (w.get("title") or "").strip().lower() or str(w["id"])
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(w)
+    return out
+
+
+def _repeat_box(client) -> None:
+    """Load a previous workout into the review table, then just update the weights and save."""
+    try:
+        options = _templates(wk.fetch_recent(client, limit=30))
+    except Exception:  # noqa: BLE001  (the History tab shows load errors)
+        return
+    if not options:
+        return
+    labels: dict[str, dict] = {}
+    for w in options:
+        label = f"{w.get('title') or 'Workout'} · last on {w['performed_on']} · {len(w['sets'])} sets"
+        while label in labels:
+            label += " ·"
+        labels[label] = w
+    with st.expander("Repeat a previous workout"):
+        pick = st.selectbox("Start from", list(labels), key="wk_repeat_pick")
+        if st.button("Load into the form", key="wk_repeat_btn"):
+            w = labels[pick]
+            rows = wk.normalize([
+                {k: s.get(k) for k in ("exercise", "muscle_group", "reps", "weight_kg", "rpe")}
+                for s in w["sets"]
+            ])
+            st.session_state.pop("wk_editor", None)  # drop edits left over from a previous table
+            st.session_state["wk_parsed"] = {
+                "title": w.get("title"), "notes": None, "warnings": [], "rows": rows,
+                "raw": f"Repeated from {w['performed_on']}",
+            }
+            st.toast("Loaded. Update the weights below, then save.")
+            st.rerun()
+
+
 def _log_tab(user) -> None:
     client = db.get_client()
+    _repeat_box(client)
     performed_on = st.date_input("Date", value=date.today(), max_value=date.today())
     text = st.text_area("What did you train?", height=150, placeholder=PLACEHOLDER)
 

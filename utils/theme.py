@@ -173,6 +173,25 @@ label, [data-testid="stWidgetLabel"] p { color: #CFCFCF; font-weight: 500; }
 [data-testid="stSlider"] [role="slider"] { background: var(--red); }
 code { color: #FF8A94; background: var(--surface-2); }
 
+/* ---------- Achievements ---------- */
+.gc-ach-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: .75rem; margin-top: .6rem;
+}
+.gc-ach {
+  display: flex; gap: .85rem; align-items: center; padding: .8rem 1rem; border-radius: 14px;
+  background: linear-gradient(145deg, rgba(225,29,46,.18), var(--surface));
+  border: 1px solid rgba(225,29,46,.55);
+}
+.gc-ach.locked {
+  background: var(--surface); border: 1px dashed var(--border); opacity: .6; filter: grayscale(1);
+}
+.gc-ach-icon { font-size: 1.7rem; line-height: 1; }
+.gc-ach-title { font-weight: 700; font-size: .95rem; color: var(--text); }
+.gc-ach-desc { color: var(--muted); font-size: .8rem; line-height: 1.35; }
+.gc-ach-prog { color: var(--red); font-size: .74rem; font-weight: 700; margin-top: .2rem; }
+.gc-ach.locked .gc-ach-prog { color: var(--muted); }
+
 /* ---------- Scrollbar ---------- */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: #2E2E2E; border-radius: 8px; }
