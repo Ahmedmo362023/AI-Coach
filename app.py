@@ -6,15 +6,7 @@ from utils import db
 st.set_page_config(page_title="GymCoachAI", page_icon="🔥", layout="wide")
 inject_theme()
 
-import streamlit.components.v1 as components
-with st.sidebar:
-    st.caption(f"server sees cookies: {list(st.context.cookies.keys())}")
-    components.html(
-        "<div style='color:#ccc;font:12px sans-serif' id=o></div>"
-        "<script>try{document.cookie='gc_test=1; path=/; SameSite=Lax; Secure';}catch(e){}"
-        "document.getElementById('o').innerText='browser cookies: '+document.cookie;</script>",
-        height=40,
-    )
+
 
 # ---------- Auth ----------
 def auth_screen() -> None:
@@ -109,7 +101,6 @@ except RuntimeError as err:
     st.stop()
 
 db.init_cookies()  
-st.sidebar.caption(f"cookie ctl: {bool(st.session_state.get('_cookie_ctl'))} | token: {bool(db._read_cookie())}")# cookie component: must run on every script run
 db.restore_session()       # after a browser refresh, log back in from the cookie
 if "user" not in st.session_state:
     db.wait_for_cookies()  # first load: let the cookie arrive before showing login
