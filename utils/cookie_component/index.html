@@ -1,0 +1,34 @@
+<!doctype html>
+<html><head><meta charset="utf-8"></head>
+<body>
+<script>
+// Minimal two-way Streamlit component (no external package, no build step).
+// Python sends {name, op: "set"|"clear"|null, token, days}; this page applies it to
+// document.cookie (same origin as the app) and reports back the cookies it can see.
+function send(type, data) {
+  window.parent.postMessage(Object.assign({isStreamlitMessage: true, type: type}, data), "*");
+}
+var last = null;
+window.addEventListener("message", function (e) {
+  if (!e.data || e.data.type !== "streamlit:render") return;
+  var a = e.data.args || {};
+  var base = "; path=/; SameSite=Lax" + (location.protocol === "https:" ? "; Secure" : "");
+  try {
+    if (a.op === "set" && a.token) {
+      document.cookie = a.name + "=" + encodeURIComponent(a.token) +
+        "; max-age=" + ((a.days || 30) * 86400) + base;
+    } else if (a.op === "clear") {
+      document.cookie = a.name + "=; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT" + base;
+    }
+  } catch (err) {}
+  var value = {cookies: document.cookie || "", op: a.op || null};
+  var s = JSON.stringify(value);
+  if (s !== last) {          // only talk back when something changed (avoids rerun loops)
+    last = s;
+    send("streamlit:setComponentValue", {value: value, dataType: "json"});
+  }
+});
+send("streamlit:componentReady", {apiVersion: 1});
+send("streamlit:setFrameHeight", {height: 0});
+</script>
+</body></html>
