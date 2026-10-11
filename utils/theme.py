@@ -23,12 +23,12 @@ _ROOT = (
 )
 
 _CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
 
 html, body, [class*="css"], .stApp, button, input, textarea {
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: 'Inter', 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
-h1, h2, h3, h4, .gc-hero { font-family: 'Poppins', 'Inter', sans-serif; }
+h1, h2, h3, h4, .gc-hero { font-family: 'Poppins', 'IBM Plex Sans Arabic', 'Inter', sans-serif; }
 
 /* Arabic/English paragraphs pick their own direction */
 .stMarkdown p, .stMarkdown li { unicode-bidi: plaintext; text-align: start; }
@@ -196,14 +196,16 @@ code { color: #FF8A94; background: var(--surface-2); }
 /* ---------- Reports + chat text: compact headings, mixed Arabic/English ---------- */
 [class*="st-key-gc_rep"] h1, [class*="st-key-gc_rep"] h2, [class*="st-key-gc_rep"] h3,
 [data-testid="stChatMessage"] h1, [data-testid="stChatMessage"] h2, [data-testid="stChatMessage"] h3 {
-  font-size: 1.12rem !important; font-weight: 700; margin: 1.1rem 0 .4rem 0; padding: 0;
-  color: var(--text); border-left: 3px solid var(--red); padding-left: .6rem;
+  font-size: 1.3rem !important; font-weight: 700; margin: 1.4rem 0 .6rem 0; padding: 0;
+  color: #fff; border-left: 3px solid var(--red); padding-left: .6rem;
   unicode-bidi: plaintext; text-align: start;
 }
 [class*="st-key-gc_rep"] p, [class*="st-key-gc_rep"] li,
 [data-testid="stChatMessage"] p, [data-testid="stChatMessage"] li {
-  font-size: .95rem; line-height: 1.75; unicode-bidi: plaintext; text-align: start;
+  font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif; font-size: 1.08rem; font-weight: 500;
+  line-height: 2; color: #F5F5F5; letter-spacing: 0; unicode-bidi: plaintext; text-align: start;
 }
+[class*="st-key-gc_rep"] li, [data-testid="stChatMessage"] li { margin-bottom: .35rem; }
 [class*="st-key-gc_rep"] ul, [class*="st-key-gc_rep"] ol,
 [data-testid="stChatMessage"] ul, [data-testid="stChatMessage"] ol {
   list-style-position: inside; padding-inline-start: .2rem;
