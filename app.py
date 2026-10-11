@@ -93,12 +93,17 @@ def main_app() -> None:
         dashboard_page.render(user)
 
 
+try:
+    db.get_client()
+except RuntimeError as err:
+    st.error(str(err))
+    st.stop()
+
+db.init_cookies()          # cookie component: must run on every script run
+db.restore_session()       # after a browser refresh, log back in from the cookie
 if "user" not in st.session_state:
-    try:
-        db.get_client()
-    except RuntimeError as err:
-        st.error(str(err))
-        st.stop()
+    db.wait_for_cookies()  # first load: let the cookie arrive before showing login
     auth_screen()
 else:
+    db.sync_cookie()       # keep the cookie in step with the rotating refresh token
     main_app()
