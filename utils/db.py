@@ -1,7 +1,5 @@
 """Supabase client + auth helpers."""
 import os
-import time
-from datetime import datetime, timedelta
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -49,64 +47,59 @@ def get_client() -> Client:
 
 
 # ---------- Stay logged in after a browser refresh ----------
-# st.session_state is wiped on refresh, so we keep Supabase's refresh token in a
-# cookie and use it to restore the session on the next page load. If the cookie
-# library is missing, everything still works; you just log in again after a refresh.
+# st.session_state is wiped on refresh, so we keep Supabase's refresh token in a browser
+# cookie. READING is synchronous: the browser sends its cookies with the page request and
+# Streamlit exposes them as st.context.cookies, so the very first run already knows the
+# token (no "component answers one rerun late" race). WRITING needs JavaScript, done by a
+# tiny zero-height HTML snippet that sets document.cookie.
 
 
 def init_cookies() -> None:
-    """Call once at the top of every script run, before restore_session()."""
-    try:
-        from streamlit_cookies_controller import CookieController
-
-        st.session_state["_cookie_ctl"] = CookieController(key="gc_cookies")
-    except Exception:  # noqa: BLE001
-        st.session_state.pop("_cookie_ctl", None)
+    """Kept for compatibility: nothing to set up any more."""
 
 
 def _read_cookie() -> str | None:
-    ctl = st.session_state.get("_cookie_ctl")
-    if not ctl:
-        return None
     try:
-        return ctl.get(COOKIE_NAME)
-    except Exception:  # noqa: BLE001  (browser hasn't answered yet: cookies is None)
+        return st.context.cookies.get(COOKIE_NAME) or None
+    except Exception:  # noqa: BLE001
         return None
+
+
+def _cookie_js(token: str | None) -> None:
+    """Set (or, with None, delete) the cookie in the browser."""
+    import json
+
+    import streamlit.components.v1 as components
+
+    if token:
+        age = COOKIE_DAYS * 86400
+        body = f"var v={json.dumps(token)};c=n+'='+encodeURIComponent(v)+'; max-age={age}'+base;"
+    else:
+        body = "c=n+'=; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT'+base;"
+    components.html(
+        "<script>(function(){var n=%s;var base='; path=/; SameSite=Lax'+"
+        "(location.protocol==='https:'?'; Secure':'');var c;%s document.cookie=c;})();</script>"
+        % (json.dumps(COOKIE_NAME), body),
+        height=0,
+    )
 
 
 def _write_cookie(token: str) -> None:
-    ctl = st.session_state.get("_cookie_ctl")
-    if not ctl:
-        return
-    try:
-        ctl.set(
-            COOKIE_NAME,
-            token,
-            max_age=COOKIE_DAYS * 86400,
-            expires=datetime.now() + timedelta(days=COOKIE_DAYS),
-        )
-    except Exception:  # noqa: BLE001
-        # The library sends the command to the browser first and only then updates its
-        # own local copy, which can fail before the browser has answered. Cookie is set.
-        pass
+    _cookie_js(token)
     st.session_state["_cookie_token"] = token
 
 
 def _clear_cookie() -> None:
-    ctl = st.session_state.get("_cookie_ctl")
     st.session_state.pop("_cookie_token", None)
-    if not ctl:
-        return
-    try:
-        ctl.remove(COOKIE_NAME)
-    except Exception:  # noqa: BLE001
-        pass
+    st.session_state["_cookie_clear"] = True  # the delete snippet is rendered by wait_for_cookies()
 
 
 def restore_session() -> bool:
     """After a refresh, log the user back in from the cookie. True if logged in."""
     if "user" in st.session_state:
         return True
+    if st.session_state.get("_cookie_clear"):
+        return False  # just logged out: the browser's old cookie must not log us back in
     token = _read_cookie()
     if not token:
         return False
@@ -117,22 +110,16 @@ def restore_session() -> bool:
         st.session_state["user"] = res.user
         return True
     except Exception:  # noqa: BLE001  (expired / revoked token)
-        _clear_cookie()
+        _cookie_js(None)
         return False
 
 
 def wait_for_cookies() -> None:
-    """On a fresh page load the cookie component answers one rerun late.
-
-    Pause once so a logged-in user doesn't see the login screen flash.
-    """
-    if "user" in st.session_state or st.session_state.get("_cookie_wait_done"):
-        return
-    if not st.session_state.get("_cookie_ctl") or _read_cookie():
-        return
-    st.session_state["_cookie_wait_done"] = True
-    time.sleep(0.6)
-    st.rerun()
+    """Call on the signed-out screen. Cookies are read synchronously, so nothing to wait for;
+    after a log out it deletes the browser cookie (a rerun right after the click would
+    otherwise drop the snippet before the browser ran it)."""
+    if st.session_state.get("_cookie_clear"):
+        _cookie_js(None)
 
 
 def sync_cookie() -> None:
@@ -144,8 +131,13 @@ def sync_cookie() -> None:
     except Exception:  # noqa: BLE001
         return
     token = session.refresh_token if session else None
-    if token and token != st.session_state.get("_cookie_token"):
-        _write_cookie(token)
+    if not token:
+        return
+    st.session_state.pop("_cookie_clear", None)
+    # Render the snippet on EVERY run while logged in. Its content only changes when the
+    # token changes, so the browser runs it once per token; and if a run was interrupted
+    # before the snippet loaded, the next run puts it back, so the write is never lost.
+    _write_cookie(token)
 
 
 # ---------- Auth ----------
