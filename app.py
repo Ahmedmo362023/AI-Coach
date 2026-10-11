@@ -99,7 +99,8 @@ except RuntimeError as err:
     st.error(str(err))
     st.stop()
 
-db.init_cookies()          # cookie component: must run on every script run
+db.init_cookies()  
+st.sidebar.caption(f"cookie ctl: {bool(st.session_state.get('_cookie_ctl'))} | token: {bool(db._read_cookie())}")# cookie component: must run on every script run
 db.restore_session()       # after a browser refresh, log back in from the cookie
 if "user" not in st.session_state:
     db.wait_for_cookies()  # first load: let the cookie arrive before showing login
