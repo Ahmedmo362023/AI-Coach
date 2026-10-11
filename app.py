@@ -6,6 +6,15 @@ from utils import db
 st.set_page_config(page_title="GymCoachAI", page_icon="🔥", layout="wide")
 inject_theme()
 
+import streamlit.components.v1 as components
+with st.sidebar:
+    st.caption(f"server sees cookies: {list(st.context.cookies.keys())}")
+    components.html(
+        "<div style='color:#ccc;font:12px sans-serif' id=o></div>"
+        "<script>try{document.cookie='gc_test=1; path=/; SameSite=Lax; Secure';}catch(e){}"
+        "document.getElementById('o').innerText='browser cookies: '+document.cookie;</script>",
+        height=40,
+    )
 
 # ---------- Auth ----------
 def auth_screen() -> None:
