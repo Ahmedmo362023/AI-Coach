@@ -144,10 +144,7 @@ def sync_cookie() -> None:
     except Exception:  # noqa: BLE001
         return
     token = session.refresh_token if session else None
-    # Compare with what the BROWSER really holds, not with what we think we sent: a write
-    # can get lost when the script reruns before the component delivers it. Without this,
-    # the cookie keeps an already-used refresh token and the next refresh logs you out.
-    if token and token != _read_cookie():
+    if token and token != st.session_state.get("_cookie_token"):
         _write_cookie(token)
 
 
